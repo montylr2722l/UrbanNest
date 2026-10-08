@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+ * UrbanNest — Global Styles
+ * ---------------------------------------------------------------------------
+ * Keep global styles minimal — prefer Tailwind utilities in components.
+ * This file handles: CSS custom properties, base resets, and typography.
+ * --------------------------------------------------------------------------- */
+
+@layer base {
+  :root {
+    /* Brand color tokens as CSS custom properties */
+    --color-brand-primary: theme("colors.brand.500");
+    --color-ink-primary: theme("colors.ink.950");
+
+    /* Scroll behavior */
+    scroll-behavior: smooth;
+  }
+
+  /* Base reset improvements */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /* Remove default margins */
+  body {
+    margin: 0;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Accessible focus styles */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+
+  /* Remove focus ring for mouse users */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Image defaults */
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Input defaults */
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  /* Heading defaults — use display font for h1/h2 */
+  h1,
+  h2 {
+    font-family: var(--font-playfair), Georgia, serif;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* Prevent text overflow */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+
+  /* Scrollbar styling — subtle */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-ink-200;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink-300;
+  }
+}
+
+@layer components {
+  /* Container — consistent max-width across pages */
+  .container-main {
+    @apply mx-auto w-full max-w-8xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Price display */
+  .price-current {
+    @apply text-lg font-semibold text-ink-950;
+  }
+
+  .price-original {
+    @apply text-sm text-ink-400 line-through;
+  }
+
+  .price-discount {
+    @apply text-sm font-medium text-success-700;
+  }
+
+  /* Product card hover state */
+  .product-card {
+    @apply rounded-xl shadow-card transition-shadow duration-200 hover:shadow-card-hover;
+  }
+}
+
+@layer utilities {
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Safe area insets for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}

@@ -1,0 +1,72 @@
+# =============================================================================
+# UrbanNest — .gitignore
+# =============================================================================
+
+# ----- Environment & Secrets (NEVER commit) ----------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+*.pem
+*.key
+*.cert
+
+# ----- Dependencies -----------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# ----- Next.js Build Artifacts -----------------------------------------------
+.next/
+out/
+build/
+dist/
+
+# ----- Prisma -----------------------------------------------------------------
+# Keep migrations; ignore generated client (regenerated from schema)
+prisma/generated/
+
+# ----- Testing ----------------------------------------------------------------
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# ----- Logs -------------------------------------------------------------------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ----- OS Artifacts -----------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ----- Editor Artifacts -------------------------------------------------------
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ----- Temporary Files --------------------------------------------------------
+*.tmp
+*.bak
+*.orig
+
+# ----- Vercel -----------------------------------------------------------------
+.vercel
+
+# ----- TypeScript -------------------------------------------------------------
+*.tsbuildinfo
+next-env.d.ts
