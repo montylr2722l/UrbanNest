@@ -2,7 +2,7 @@
 
 > **Discover Your Style, Closer.**
 
-UrbanNest is a production-grade multi-vendor fashion marketplace connecting customers with local physical fashion stores, online sellers, and brands across India.
+UrbanNest is a local-first multi-vendor fashion marketplace under active development. It is not production-ready.
 
 ---
 
@@ -24,30 +24,19 @@ UrbanNest is a production-grade multi-vendor fashion marketplace connecting cust
 
 ## Project Status
 
-| Phase | Description | Status |
-|---|---|---|
-| Phase 0 | Project foundation | ✅ Complete |
-| Phase 1 | Database + Prisma migrations | 🔄 Next |
-| Phase 2 | Authentication + RBAC | ⏳ Pending |
-| Phase 3 | Seller onboarding + KYC | ⏳ Pending |
-| Phase 4 | Stores + location | ⏳ Pending |
-| Phase 5 | Categories + products | ⏳ Pending |
-| Phase 6 | Variants + inventory | ⏳ Pending |
-| Phase 7 | Customer storefront | ⏳ Pending |
-| Phase 8 | Cart + checkout | ⏳ Pending |
-| Phase 9 | Orders + seller orders | ⏳ Pending |
-| Phase 10 | Payments + COD | ⏳ Pending |
-| Phase 11 | Commission + settlements | ⏳ Pending |
-| Phase 12 | Delivery workflow | ⏳ Pending |
-| Phase 13 | Returns + exchanges + refunds | ⏳ Pending |
-| Phase 14 | Reviews + wishlist + coupons | ⏳ Pending |
-| Phase 15 | Seller dashboard | ⏳ Pending |
-| Phase 16 | Admin dashboard | ⏳ Pending |
-| Phase 17 | Location/best-seller engine | ⏳ Pending |
-| Phase 18 | Security hardening | ⏳ Pending |
-| Phase 19 | Testing | ⏳ Pending |
-| Phase 20 | Production deployment | ⏳ Pending |
-| Phase 21 | Final production audit | ⏳ Pending |
+| Area | Current status |
+|---|---|
+| Credentials authentication and customer account | Implemented; existing account/profile flows preserved |
+| Seller application, admin review, store approval | Implemented |
+| Seller product draft, inventory, submit/pause/archive | Implemented (single variant at creation; image upload and editing remain outstanding) |
+| Product moderation and public search/catalogue/detail | Implemented (requires live category/product records) |
+| Saved address, cart, transactional multi-seller COD checkout | Implemented in code; database integration not run |
+| Seller order queue and fulfilment transitions | Implemented with owner checks |
+| COD unpaid state and admin reconciliation | Implemented; admin records confirmed collection amount/reference |
+| Commission | Admin-configurable global rate, default 10%; order/suborder snapshots recorded |
+| Online payments, refunds, payouts, settlements | Not implemented |
+| Database migrations | None checked in; target database not inspected or migrated |
+| Production readiness | Not ready; see [PROJECT_STATUS.md](./PROJECT_STATUS.md) |
 
 ---
 
@@ -63,10 +52,10 @@ UrbanNest is a production-grade multi-vendor fashion marketplace connecting cust
 | Styling | Tailwind CSS |
 | UI Primitives | Radix UI |
 | Validation | Zod |
-| Payments | Razorpay |
-| Marketplace Settlement | Razorpay Route |
-| Object Storage | Cloudflare R2 / AWS S3 |
-| Email | Resend |
+| Payments | COD workflow; no online gateway integrated |
+| Marketplace Settlement | Not implemented; no payout integration |
+| Object Storage | Not configured; product image upload is not implemented |
+| Email | Not configured |
 | Decimal/Financial | decimal.js |
 | Testing | Jest + Playwright |
 | Hosting (FE) | Vercel |
@@ -109,12 +98,11 @@ Edit `.env.local` and fill in the required values. See [Environment Variables](#
 # Generate Prisma client
 npm run db:generate
 
-# Run migrations (creates all tables)
-npm run db:migrate
-
-# (Optional) Seed initial data
-npm run db:seed
+# Validate schema without connecting to a database
+npm run db:validate
 ```
+
+There are currently no checked-in migrations. Review the configured database target and existing schema before creating or applying a migration. Do not run `npm run db:migrate` against a shared or production database; it may apply schema changes.
 
 ### 5. Start the development server
 
@@ -149,7 +137,7 @@ See [`.env.example`](./.env.example) for the complete list with documentation.
 urbannest/
 ├── prisma/
 │   ├── schema.prisma       # Complete database schema — single source of truth
-│   └── migrations/         # Auto-generated migration history
+│   └── migrations/         # No migration history is checked in yet
 │
 ├── src/
 │   ├── app/                # Next.js App Router
@@ -237,10 +225,11 @@ npm run lint
 # Format
 npm run format
 
-# Database commands
+# Database commands (review target and migration before applying)
 npm run db:generate     # Regenerate Prisma client after schema changes
-npm run db:migrate      # Create and apply new migration
-npm run db:migrate:deploy  # Apply migrations in production
+npm run db:validate     # Validate schema with placeholder URLs; no DB connection
+# npm run db:migrate    # Creates/applies migration; do not run on unknown/shared DB
+npm run db:migrate:deploy  # Applies migrations; run only after owner review
 npm run db:studio       # Open Prisma Studio (visual DB browser)
 
 # Tests
@@ -288,7 +277,7 @@ Tests are mandatory for:
 
 See [`docs/deployment.md`](./docs/deployment.md) for full deployment instructions.
 
-**Target architecture:**
+**Potential deployment architecture (not configured or verified):**
 - Frontend: Vercel
 - Database: Supabase (managed PostgreSQL)
 - Object Storage: Cloudflare R2
@@ -329,10 +318,16 @@ The browser never accesses PostgreSQL directly. All business logic lives in rout
 
 > **Razorpay Route** — Marketplace seller payouts require a separate agreement with Razorpay. Do not enable `RAZORPAY_ROUTE_ENABLED=true` until properly onboarded.
 
-> **KYC/Legal** — Seller KYC requirements follow applicable Indian regulations. The KYC structure is implemented per Razorpay's onboarding flow. Validate with a legal professional before processing real KYC data.
+> **KYC/Legal** — Seller applications currently collect shop contact/location details only. Seller identity/KYC verification is not implemented. Validate applicable requirements before onboarding real sellers.
 
-> **Tax/GST** — The GST architecture is implemented but tax rates are configurable and NOT hard-coded. Validate with a qualified Indian tax professional before processing taxed transactions.
+> **Tax/GST** — Checkout currently calculates no tax. Validate tax treatment with a qualified Indian tax professional before processing real transactions.
 
 ---
 
 *UrbanNest — Build in progress. Not yet in production.*
+
+## Verified implementation status
+
+The current implementation includes customer credentials registration/login/account, seller applications and store profiles, admin seller and product review, seller product/inventory management, public product browse/search/detail, saved addresses, cart, multi-seller COD checkout and order fulfilment. COD collection can be recorded by an admin after delivery. The Prisma schema defines additional marketplace entities not yet used by working flows. No online payment provider, payout system, returns workflow, image upload service, checked-in migration or seed script is provided. See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for current limitations and verification.
+
+Do not use a publicly reachable seeded administrator password. No admin bootstrap workflow currently exists; provision an administrator through a controlled, reviewed database procedure once that workflow is designed.

@@ -27,6 +27,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return null;
           }
 
+          // Disabled and soft-deleted accounts must not receive a fresh session.
+          if (!user.isActive || user.deletedAt !== null) {
+            return null;
+          }
+
           const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
           if (!passwordsMatch) {
             return null;

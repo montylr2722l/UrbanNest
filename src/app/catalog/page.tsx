@@ -1,0 +1,18 @@
+import Link from "next/link";
+import Image from "next/image";
+import { prisma } from "@/lib/prisma";
+
+export default async function CatalogPage({ searchParams }: { searchParams: Promise<{ q?: string; category?: string }> }) {
+  const params = await searchParams;
+  const query = params.q?.trim().slice(0, 80);
+  const [categories, products] = await Promise.all([
+    prisma.category.findMany({ where: { isActive: true }, orderBy: { displayOrder: "asc" }, select: { id: true, name: true, slug: true } }),
+    prisma.product.findMany({ where: { status: "PUBLISHED", seller: { isActive: true, isSuspended: false, user: { isActive: true, deletedAt: null } }, ...(params.category ? { category: { slug: params.category, isActive: true } } : {}), ...(query ? { OR: [{ name: { contains: query, mode: "insensitive" as const } }, { description: { contains: query, mode: "insensitive" as const } }, { brand: { contains: query, mode: "insensitive" as const } }] } : {}) }, include: { category: { select: { name: true } }, images: { where: { isPrimary: true }, take: 1 }, variants: { where: { isActive: true }, include: { inventory: { where: { store: { isActive: true } }, include: { store: { select: { sellerId: true } } } } } } }, orderBy: { createdAt: "desc" }, take: 60 }),
+  ]);
+  const productsInStock = products.filter((product) => product.variants.some((variant) => variant.inventory.some((stock) => stock.store.sellerId === product.sellerId && stock.quantity > stock.reservedQuantity)));
+  return <main className="container-main min-h-screen py-10"><header className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm text-brand-700">UrbanNest catalogue</p><h1 className="font-display text-4xl">Find your style</h1></div><Link href="/cart" className="rounded-full border px-4 py-2 text-sm">View cart</Link></header>
+    <form className="mt-7 flex gap-2"><input name="q" defaultValue={query} placeholder="Search products, brands" className="min-w-0 flex-1 rounded-xl border bg-white px-4 py-3"/><button className="rounded-xl bg-ink-950 px-5 text-white">Search</button></form>
+    <nav aria-label="Product categories" className="mt-5 flex flex-wrap gap-2"><Link href="/catalog" className="rounded-full bg-white px-4 py-2 text-sm">All</Link>{categories.map((category) => <Link key={category.id} href={`/catalog?category=${encodeURIComponent(category.slug)}`} className="rounded-full bg-white px-4 py-2 text-sm">{category.name}</Link>)}</nav>
+    {productsInStock.length === 0 ? <div className="mt-10 rounded-2xl border border-dashed bg-white p-12 text-center"><h2 className="text-xl font-semibold">No products available</h2><p className="mt-2 text-ink-500">Approved shops will appear here when they publish in stock products.</p></div> : <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{productsInStock.map((product) => { const variant = product.variants.find((v) => v.inventory.some((s) => s.store.sellerId === product.sellerId && s.quantity > s.reservedQuantity)); return <Link key={product.id} href={`/products/${product.slug}`} className="overflow-hidden rounded-xl bg-white shadow-card transition hover:shadow-card-hover">{product.images[0] ? <Image src={product.images[0].url} alt={product.images[0].altText ?? product.name} width={600} height={750} unoptimized className="aspect-[4/5] w-full object-cover"/> : <div className="aspect-[4/5] bg-brand-100" aria-label="No product image"/>}<div className="p-3"><p className="text-xs text-ink-500">{product.category.name}</p><h2 className="mt-1 line-clamp-2 font-medium">{product.name}</h2>{variant && <p className="mt-2 font-semibold">₹{variant.price.toFixed(2)}</p>}</div></Link>; })}</div>}
+  </main>;
+}

@@ -19,6 +19,9 @@ export default async function OrdersPage() {
       status: true,
       totalAmount: true,
       createdAt: true,
+      paymentStatus: true,
+      paymentMethod: true,
+      sellerOrders: { select: { id: true, status: true, store: { select: { name: true } } } },
     }
   });
 
@@ -41,7 +44,7 @@ export default async function OrdersPage() {
               When you place orders, they will appear here. Start shopping to find your next favorite outfit.
             </p>
             <Link
-              href="/"
+              href="/catalog"
               className="mt-6 inline-flex items-center rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-600 transition-colors"
             >
               Browse Products
@@ -74,6 +77,8 @@ export default async function OrdersPage() {
                     </td>
                     <td className="px-4 py-3 font-medium text-ink-900">
                       ₹{order.totalAmount.toString()}
+                      <p className="text-xs font-normal text-ink-500">{order.paymentMethod ?? "Payment"}: {order.paymentStatus.replaceAll("_", " ")}</p>
+                      <p className="mt-1 text-xs font-normal text-ink-500">{order.sellerOrders.map((sellerOrder) => `${sellerOrder.store.name}: ${sellerOrder.status.replaceAll("_", " ")}`).join(" · ")}</p>
                     </td>
                   </tr>
                 ))}

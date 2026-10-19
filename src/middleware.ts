@@ -7,15 +7,14 @@ const { auth } = NextAuth(authConfig);
 /**
  * UrbanNest — Next.js Middleware
  *
- * Phase 1: Authentication and role-based protection.
+ * Edge protection for account and admin paths. Seller and API handlers also
+ * perform database-backed authorization before reading or changing records.
  */
 export const config = {
   matcher: [
     "/account/:path*",
     "/checkout/:path*",
-    "/seller/:path*",
     "/admin/:path*",
-    "/api/seller/:path*",
     "/api/admin/:path*",
     "/api/account/:path*",
   ],
