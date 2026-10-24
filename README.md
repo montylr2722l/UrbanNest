@@ -35,7 +35,7 @@ UrbanNest is a local-first multi-vendor fashion marketplace under active develop
 | COD unpaid state and admin reconciliation | Implemented; admin records confirmed collection amount/reference |
 | Commission | Admin-configurable global rate, default 10%; order/suborder snapshots recorded |
 | Online payments, refunds, payouts, settlements | Not implemented |
-| Database migrations | None checked in; target database not inspected or migrated |
+| Database migrations | Initial migration checked in; configured database migration status not verified |
 | Production readiness | Not ready; see [PROJECT_STATUS.md](./PROJECT_STATUS.md) |
 
 ---
@@ -47,7 +47,7 @@ UrbanNest is a local-first multi-vendor fashion marketplace under active develop
 | Framework | Next.js 15 (App Router) |
 | Language | TypeScript (strict) |
 | ORM | Prisma 6 |
-| Database | PostgreSQL (Supabase) |
+| Database | PostgreSQL (Neon target configured locally; verify before use) |
 | Auth | Auth.js v5 (NextAuth) |
 | Styling | Tailwind CSS |
 | UI Primitives | Radix UI |
@@ -100,9 +100,12 @@ npm run db:generate
 
 # Validate schema without connecting to a database
 npm run db:validate
+
+# Open Prisma Studio against the configured database
+npm run db:studio
 ```
 
-There are currently no checked-in migrations. Review the configured database target and existing schema before creating or applying a migration. Do not run `npm run db:migrate` against a shared or production database; it may apply schema changes.
+Prisma CLI commands use `prisma.config.ts` to load the same environment files as Next.js, including `.env.local`; values are not printed. The repository includes an initial migration, but the configured database's migration status has not been confirmed. Check the target and review migration SQL before applying schema changes. Do not run migrations against a shared or production database without an approved plan.
 
 ### 5. Start the development server
 
@@ -137,7 +140,7 @@ See [`.env.example`](./.env.example) for the complete list with documentation.
 urbannest/
 ├── prisma/
 │   ├── schema.prisma       # Complete database schema — single source of truth
-│   └── migrations/         # No migration history is checked in yet
+│   └── migrations/         # Initial schema migration is checked in
 │
 ├── src/
 │   ├── app/                # Next.js App Router
@@ -328,6 +331,6 @@ The browser never accesses PostgreSQL directly. All business logic lives in rout
 
 ## Verified implementation status
 
-The current implementation includes customer credentials registration/login/account, seller applications and store profiles, admin seller and product review, seller product/inventory management, public product browse/search/detail, saved addresses, cart, multi-seller COD checkout and order fulfilment. COD collection can be recorded by an admin after delivery. The Prisma schema defines additional marketplace entities not yet used by working flows. No online payment provider, payout system, returns workflow, image upload service, checked-in migration or seed script is provided. See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for current limitations and verification.
+The current implementation includes customer credentials registration/login/account, seller applications and store profiles, admin seller and product review, seller product/inventory management, public product browse/search/detail, saved addresses, cart, multi-seller COD checkout and order fulfilment. COD collection can be recorded by an admin after delivery. The Prisma schema defines additional marketplace entities not yet used by working flows. No online payment provider, payout system, returns workflow, image upload service, or seed implementation is provided. An initial migration is checked in, but the configured database's migration status is unverified. See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for current limitations and verification.
 
 Do not use a publicly reachable seeded administrator password. No admin bootstrap workflow currently exists; provision an administrator through a controlled, reviewed database procedure once that workflow is designed.

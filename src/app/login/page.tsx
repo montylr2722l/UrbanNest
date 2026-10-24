@@ -1,14 +1,19 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import type { Route } from "next";
+import {
+  getDefaultLoginDestination,
+  getSafeCallbackDestination,
+} from "@/lib/auth/login-redirect";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/account";
+  const callbackUrl = searchParams.get("callbackUrl");
   const registered = searchParams.get("registered");
 
   const [email, setEmail] = useState("");
@@ -33,14 +38,18 @@ function LoginForm() {
         setError("Invalid email or password. Please try again.");
         setLoading(false);
       } else if (res?.ok) {
-        // Prevent open redirect by ensuring it's a relative path
-        if (callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          router.push(callbackUrl as any);
-        } else {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          router.push("/account" as any);
+        // Read the role from the authenticated server session, never from the URL or form.
+        const session = await getSession();
+        const defaultDestination = getDefaultLoginDestination(session?.user?.role);
+
+        if (!defaultDestination) {
+          setError("Could not confirm your account. Please sign in again.");
+          setLoading(false);
+          return;
         }
+
+        const safeCallback = getSafeCallbackDestination(callbackUrl, window.location.origin);
+        router.push((safeCallback ?? defaultDestination) as Route);
         router.refresh(); // Force a refresh to ensure server components update with the new session
       }
     } catch {

@@ -5,7 +5,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RegisterPage from "@/app/register/page";
 import LoginPage from "@/app/login/page";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // Mock next/navigation
@@ -16,6 +16,7 @@ jest.mock("next/navigation", () => ({
 
 // Mock next-auth/react
 jest.mock("next-auth/react", () => ({
+  getSession: jest.fn(),
   signIn: jest.fn(),
 }));
 
@@ -31,7 +32,7 @@ describe("Authentication UI", () => {
     });
     (useSearchParams as jest.Mock).mockReturnValue({
       get: jest.fn().mockImplementation((key) => {
-        if (key === "callbackUrl") return "/account";
+        if (key === "callbackUrl") return null;
         if (key === "registered") return null;
         return null;
       }),
@@ -101,8 +102,13 @@ describe("Authentication UI", () => {
   });
 
   describe("LoginPage", () => {
-    it("should call signIn and redirect on successful login", async () => {
+    it.each([
+      ["CUSTOMER", "/account"],
+      ["SELLER", "/seller"],
+      ["ADMIN", "/admin"],
+    ])("redirects an authenticated %s to its dashboard", async (role, destination) => {
       (signIn as jest.Mock).mockResolvedValueOnce({ ok: true, error: null });
+      (getSession as jest.Mock).mockResolvedValueOnce({ user: { role } });
 
       const user = userEvent.setup();
       render(<LoginPage />);
@@ -119,8 +125,29 @@ describe("Authentication UI", () => {
           email: "test@example.com",
           password: "ValidPass1",
         });
-        expect(mockPush).toHaveBeenCalledWith("/account"); // default callbackUrl
+        expect(getSession).toHaveBeenCalled();
+        expect(mockPush).toHaveBeenCalledWith(destination);
         expect(mockRefresh).toHaveBeenCalled();
+      });
+    });
+
+    it("preserves a safe internal callback after confirming the session", async () => {
+      (signIn as jest.Mock).mockResolvedValueOnce({ ok: true, error: null });
+      (getSession as jest.Mock).mockResolvedValueOnce({ user: { role: "CUSTOMER" } });
+      (useSearchParams as jest.Mock).mockReturnValue({
+        get: jest.fn().mockImplementation((key) =>
+          key === "callbackUrl" ? "/products/linen-shirt?color=blue" : null,
+        ),
+      });
+
+      const user = userEvent.setup();
+      render(<LoginPage />);
+      await user.type(screen.getByLabelText(/Email address/i), "test@example.com");
+      await user.type(screen.getByLabelText(/Password/i), "ValidPass1");
+      await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith("/products/linen-shirt?color=blue");
       });
     });
 
